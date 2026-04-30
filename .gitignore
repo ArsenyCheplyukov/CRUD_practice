@@ -1,0 +1,18 @@
+# Cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distributions
+dist/
+build/
+*.egg-info/
+
+# Virtual environment
+.venv/
+
+# Sensitive data
+.env
+
+# Postgres Data - Error, postgres in docker pastes data folder into my project
+data/

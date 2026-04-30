@@ -1,0 +1,24 @@
+services:
+  db:
+    container_name: database
+    image: postgres:18
+    restart: always
+    env_file:
+      - ./db/.env
+    volumes:
+      # 1. Initialization: Runs once when the DB is first created
+      - ./db/init/init.sql:/docker-entrypoint-initdb.d/init.sql
+      # 3. Persistence: Keeps your table data safe
+      - postgres_data:/var/lib/postgresql
+    ports:
+      - "5432:5432"
+  
+  app:
+    build: ./app
+    container_name: app
+    restart: always
+    ports:
+      - "8000:8000"
+
+volumes:
+  postgres_data:
