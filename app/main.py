@@ -11,6 +11,13 @@ load_dotenv()
 app = FastAPI()
 app.include_router(router)
 
-app.on_event("startup")
-async def startup_event():
-  Base.metadata.create_all(bind=engine)
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # startup
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    yield
+
+app = FastAPI(lifespan=lifespan)

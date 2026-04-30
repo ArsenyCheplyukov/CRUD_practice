@@ -199,3 +199,60 @@ Tables are created on application startup using FastAPI lifespan:
 - wrong datetime default usage
 - circular imports between models
 - outdated Pydantic config in ORM layer
+
+## Repository Layer
+
+Implemented basic repository pattern to isolate database logic.
+
+### UserRepository
+
+Provides methods:
+
+- create user
+- get user by id
+- get user by name
+- get all users
+
+---
+
+### Key Concepts
+
+#### ORM Usage
+
+- objects are created via Python classes (`User`)
+- changes are tracked by session
+- database operations are executed on `commit`
+
+---
+
+#### Session Behavior
+
+- `add()` → adds object to session (no DB call)
+- `commit()` → executes SQL (INSERT/UPDATE)
+- `refresh()` → reloads object from database
+
+---
+
+#### Query Execution
+
+- all queries are executed via `await session.execute(...)`
+- results are processed using:
+  - `.scalars().all()` → list of objects
+  - `.scalar_one_or_none()` → single object or None
+
+---
+
+### Common Mistakes (fixed)
+
+- mixing ORM with SQL Core syntax (`insert()` misuse)
+- incorrect `where()` conditions
+- returning wrong data types (list vs single object)
+- misunderstanding of session lifecycle
+
+---
+
+### Notes
+
+- ORM does not execute queries immediately
+- operations are batched and executed on commit
+- async behavior applies only to I/O operations
