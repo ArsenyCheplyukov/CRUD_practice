@@ -1,7 +1,7 @@
 services:
   db:
     container_name: database
-    image: postgres:18
+    image: postgres:18.3
     restart: always
     env_file:
       - ./db/.env
@@ -14,9 +14,11 @@ services:
       - "5432:5432"
   
   app:
-    build: ./app
+    build: ./project
     container_name: app
     restart: always
+    env_file:
+    - ./project/app/.env
     ports:
       - "8000:8000"
 

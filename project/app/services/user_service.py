@@ -1,12 +1,12 @@
-from models import User
-from repositories import UserRepository
+from app.models import User
+from app.repositories import UserRepository
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 
 
 class UserService:
-  def __init__(self) -> None:
-    self.repo = UserRepository()
+  def __init__(self, repo: UserRepository):
+    self.repo = repo
 
   async def create_user(self, session: AsyncSession, name: str) -> User:
     # get user by name
