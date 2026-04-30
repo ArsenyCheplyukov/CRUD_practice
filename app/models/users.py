@@ -11,7 +11,7 @@ class User(Base):
   __tablename__ = "users"
 
   id: Mapped[int] = mapped_column(primary_key=True)
-  name: Mapped[str]
+  name: Mapped[str] = mapped_column(unique=True)  # like nickname
 
   posts: Mapped[list["Post"]] = relationship(back_populates="user")
   comments: Mapped[list["Comment"]] = relationship(back_populates="user")

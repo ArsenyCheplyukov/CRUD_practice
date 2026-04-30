@@ -256,3 +256,61 @@ Provides methods:
 - ORM does not execute queries immediately
 - operations are batched and executed on commit
 - async behavior applies only to I/O operations
+
+---
+
+## Service Layer
+
+Service layer contains business logic and controls transactions.
+
+It is placed between API and repository.
+
+---
+
+### Structure
+
+- repository → works with database (ORM, queries)
+- service → controls logic and flow
+- API → handles requests and responses
+
+---
+
+### Key points
+
+- repository **does not use commit**
+- service **controls commit / refresh**
+- session is passed from API (DI)
+
+---
+
+### Example
+
+```python
+class UserService:
+    def __init__(self) -> None:
+        self.repo = UserRepository()
+
+    async def create_user(self, session: AsyncSession, name: str) -> User:
+        user = await self.repo.get_by_name(session, name)
+        if user:
+            raise ValueError(f"User with name {name} already exists")
+
+        user = await self.repo.create(session, name)
+        await session.commit()
+        await session.refresh(user)
+        return user
+```
+
+---
+
+### Notes
+
+- forgot to use `raise` when creating exception
+- confused ORM logic with transaction control
+- learned that:
+  - repository → data
+  - service → transaction
+
+- `session.add()` does not send query immediately (unit of work)
+
+---
