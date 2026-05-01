@@ -1,7 +1,7 @@
 # core/dependencies.py
 
-from app.services.user_service import UserService
 from app.repositories.user_repository import UserRepository
+from app.services.user_service import UserService
 from fastapi import Depends
 
 

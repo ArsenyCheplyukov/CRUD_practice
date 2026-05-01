@@ -1,11 +1,13 @@
-from .base import Base
-from sqlalchemy.orm import Mapped, relationship, mapped_column
-from sqlalchemy import ForeignKey
 from typing import TYPE_CHECKING
 
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from .base import Base
+
 if TYPE_CHECKING:
-    from .users import User
     from .comments import Comment
+    from .users import User
 
 
 class Post(Base):

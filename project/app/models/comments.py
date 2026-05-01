@@ -1,12 +1,14 @@
-from .base import Base
-from sqlalchemy.orm import Mapped, relationship, mapped_column
-from sqlalchemy import ForeignKey
 import datetime
 from typing import TYPE_CHECKING
 
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from .base import Base
+
 if TYPE_CHECKING:
-    from .users import User
     from .posts import Post
+    from .users import User
 
 
 class Comment(Base):

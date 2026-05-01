@@ -1,6 +1,7 @@
 import os
 from typing import Any, AsyncGenerator
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 # 2. Retrieve the URL
 DATABASE_URL = os.getenv("DATABASE_URL")
