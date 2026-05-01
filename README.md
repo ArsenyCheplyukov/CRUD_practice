@@ -1,144 +1,104 @@
 # FastAPI + PostgreSQL Learning Project
 
-## Goal
+## Overview
 
-This project is a fast hands-on practice to rebuild backend skills using:
+This project is a backend learning implementation designed to rebuild and solidify core backend engineering skills using a modern Python stack.
 
-- FastAPI
-- SQLAlchemy (async)
-- PostgreSQL
-- Docker
+The focus is not just on building CRUD functionality, but on understanding how a real backend system is structured and evolves over time.
 
-Main goal:
+### Core stack
 
-- refresh core backend concepts
-- understand architecture (API → Service → Repository → DB)
-- build a reusable reference project
+- FastAPI (API layer)
+- SQLAlchemy 2.0 (async ORM)
+- PostgreSQL (database)
+- Pydantic v2 (data validation)
+- Docker / Docker Compose (environment)
 
 ---
 
-## Tech Stack
+## Project Goals
 
-- FastAPI
-- SQLAlchemy 2.0 (async)
-- PostgreSQL
-- Docker / Docker Compose
-- Pydantic
+- Rebuild backend fundamentals from scratch
+- Understand layered architecture:
+  - API → Service → Repository → Database
+- Learn async database interaction patterns
+- Understand ORM behavior and transaction lifecycle
+- Build a reusable backend template for future projects
+
+---
+
+## Architecture Overview
+
+The system follows a strict layered architecture:
+
+Client → FastAPI (API Layer) → Service Layer → Repository Layer → SQLAlchemy ORM → PostgreSQL
+
+### Layer responsibilities
+
+- **API layer**: request handling, response formatting, dependency injection
+- **Service layer**: business logic and transaction control
+- **Repository layer**: database queries and persistence logic
+- **ORM layer**: object-relational mapping to PostgreSQL
 
 ---
 
 ## Project Structure
 
 app/
-
-- api/ → HTTP layer (routes)
-- core/ → config and database setup
-- models/ → ORM models (tables)
-- schemas/ → Pydantic schemas (DTO)
-- repositories/ → DB queries
-- services/ → business logic
-- main.py → entry point
-
----
-
-## What is implemented
-
-### 1. Basic FastAPI setup
-
-- application initialized
-- health check endpoint added
-
-### 2. Docker environment
-
-- PostgreSQL container
-- volume for data persistence
-- environment variables via .env
-
-### 3. Database connection
-
-- async SQLAlchemy engine
-- session factory
-- dependency injection for DB session
+├── api/ # HTTP routes (FastAPI layer)
+├── core/ # configuration, DB, dependencies
+├── models/ # SQLAlchemy ORM models
+├── schemas/ # Pydantic DTOs (request/response models)
+├── repositories/ # database access layer
+├── services/ # business logic layer
+└── main.py # application entry point
 
 ---
 
-## Key Concepts Learned
+## Key Concepts Implemented
 
-### SQLAlchemy Layers
+### 1. FastAPI Fundamentals
 
-- ORM → used for most operations
-- Raw SQL → used for complex queries
-- Core → optional query builder
-
-Decision:
-Use ORM as main approach + raw SQL when needed
+- Route handling using APIRouter
+- Health check endpoint
+- Dependency injection system (Depends)
 
 ---
 
-### Engine vs Session
+### 2. Async Database Layer
 
-- Engine = connection pool
-- Session = unit of work per request
+- SQLAlchemy 2.0 async engine
+- AsyncSession lifecycle management
+- PostgreSQL integration via asyncpg
 
-Important:
+Important rules:
 
 - one session per request
-- no global sessions
+- no global session usage
+- sessions managed via FastAPI dependencies
 
 ---
 
-### Dependency Injection (FastAPI)
+### 3. Dependency Injection (DI)
 
-- DB session created per request
-- automatically closed after request
-- prevents connection leaks
+FastAPI DI is used for:
 
----
+- database session (`get_db`)
+- service layer injection (`get_user_service`)
 
-## Problems Faced
+This ensures:
 
-- confusion with Python module paths inside Docker
-- PostgreSQL volume path differences
-- initial uncertainty with async SQLAlchemy setup
-
----
-
-## Notes
-
-This project is intentionally simple.
-
-Focus:
-
-- understanding fundamentals
-- clean architecture
-- reproducibility
+- no global state
+- controlled lifecycle of resources
+- better testability
 
 ---
 
-## Next Steps
+## ORM Layer (SQLAlchemy)
 
-- create ORM models
-- implement repositories
-- add service layer
-- build CRUD endpoints
-- handle relations and N+1 problem
+### Model design
 
-## Database Layer
-
-The project uses PostgreSQL with SQLAlchemy (async) and FastAPI.
-
-### Connection
-
-- async engine: `create_async_engine`
-- driver: `asyncpg`
-- session factory: `async_sessionmaker`
-- dependency injection via `get_db`
-
----
-
-## ORM Models
-
-Implemented using SQLAlchemy 2.0 style:
+Entities:
 
 - User
 - Post
@@ -147,170 +107,205 @@ Implemented using SQLAlchemy 2.0 style:
 ### Relationships
 
 - User → Posts (1:N)
-- Post → Comments (1:N)
 - User → Comments (1:N)
+- Post → Comments (1:N)
 
-Each relationship is defined in both directions using `relationship` and `back_populates`.
+Relationships are defined using:
 
----
-
-## Important Concepts
-
-### ForeignKey vs relationship
-
-- ForeignKey → defines constraint in database
-- relationship → enables object-level navigation in Python
-
-Both are required for proper ORM usage.
+- `ForeignKey`
+- `relationship`
+- `back_populates`
 
 ---
 
-### Async + Sync Boundary
+### Important ORM behavior
 
-SQLAlchemy metadata operations (like `create_all`) are synchronous.
+- Objects are tracked by session
+- `add()` does not execute SQL immediately
+- SQL is executed on `commit()`
+- `refresh()` reloads DB state into object
 
-To use them with async engine:
-
-- open async connection (`engine.begin`)
-- execute sync code via `run_sync`
-
----
-
-### Table Initialization
-
-Tables are created on application startup using FastAPI lifespan:
-
-- replaces deprecated `on_event`
-- ensures async-safe initialization
+This follows Unit of Work pattern.
 
 ---
 
-### Typing Strategy
+## Schema Layer (Pydantic v2)
 
-- use `Mapped[...]` for ORM fields
-- use string-based references for relationships (avoid circular imports)
-- use `TYPE_CHECKING` for IDE-only imports
+Pydantic is used as a DTO layer between API and ORM.
 
----
+### Schema types
 
-### Common Pitfalls (fixed)
+- `UserCreate` → request input
+- `UserRead` → response output
 
-- incorrect async table creation
-- wrong datetime default usage
-- circular imports between models
-- outdated Pydantic config in ORM layer
+### Key principle
 
-## Repository Layer
+ORM models are NEVER exposed directly to API.
 
-Implemented basic repository pattern to isolate database logic.
+Instead:
 
-### UserRepository
+- ORM → internal representation
+- Pydantic → external contract
 
-Provides methods:
+### ORM compatibility
 
-- create user
-- get user by id
-- get user by name
-- get all users
-
----
-
-### Key Concepts
-
-#### ORM Usage
-
-- objects are created via Python classes (`User`)
-- changes are tracked by session
-- database operations are executed on `commit`
-
----
-
-#### Session Behavior
-
-- `add()` → adds object to session (no DB call)
-- `commit()` → executes SQL (INSERT/UPDATE)
-- `refresh()` → reloads object from database
-
----
-
-#### Query Execution
-
-- all queries are executed via `await session.execute(...)`
-- results are processed using:
-  - `.scalars().all()` → list of objects
-  - `.scalar_one_or_none()` → single object or None
-
----
-
-### Common Mistakes (fixed)
-
-- mixing ORM with SQL Core syntax (`insert()` misuse)
-- incorrect `where()` conditions
-- returning wrong data types (list vs single object)
-- misunderstanding of session lifecycle
-
----
-
-### Notes
-
-- ORM does not execute queries immediately
-- operations are batched and executed on commit
-- async behavior applies only to I/O operations
+- `from_attributes = True` enables ORM → Pydantic conversion
 
 ---
 
 ## Service Layer
 
-Service layer contains business logic and controls transactions.
+The service layer contains business logic and transaction control.
 
-It is placed between API and repository.
+### Responsibilities
 
----
+- validation of business rules
+- orchestration of repository calls
+- transaction management (`commit`, `refresh`)
+- error handling
 
-### Structure
+### Example behavior
 
-- repository → works with database (ORM, queries)
-- service → controls logic and flow
-- API → handles requests and responses
-
----
-
-### Key points
-
-- repository **does not use commit**
-- service **controls commit / refresh**
-- session is passed from API (DI)
+- check if user exists
+- create user if not exists
+- handle race conditions via DB constraints
 
 ---
 
-### Example
+## Repository Layer
 
-```python
-class UserService:
-    def __init__(self) -> None:
-        self.repo = UserRepository()
+Repository isolates all database operations.
 
-    async def create_user(self, session: AsyncSession, name: str) -> User:
-        user = await self.repo.get_by_name(session, name)
-        if user:
-            raise ValueError(f"User with name {name} already exists")
+### Responsibilities
 
-        user = await self.repo.create(session, name)
-        await session.commit()
-        await session.refresh(user)
-        return user
-```
+- execute SQLAlchemy queries
+- return ORM objects
+- no business logic
+- no transaction control
+
+### Example operations
+
+- get user by id
+- get user by name
+- create user
+- list users
 
 ---
 
-### Notes
+## Transaction Flow
 
-- forgot to use `raise` when creating exception
-- confused ORM logic with transaction control
-- learned that:
-  - repository → data
-  - service → transaction
+Typical request lifecycle:
 
-- `session.add()` does not send query immediately (unit of work)
+Request → API → Service → Repository → ORM → Database → Response
+
+---
+
+## Database Initialization
+
+- Tables created on application startup
+- Uses FastAPI lifespan event
+- Async-safe initialization via `run_sync`
+
+---
+
+## Docker Environment
+
+Project runs in Docker with:
+
+- PostgreSQL container
+- Application container
+- Shared network communication
+- Environment variables via `.env`
+
+---
+
+## Code Quality Tools
+
+The project uses:
+
+- black → formatting
+- isort → import sorting
+- ruff → linting
+
+Purpose:
+
+- enforce consistent code style
+- reduce manual formatting errors
+- improve readability and maintainability
+
+---
+
+## Key Problems Solved
+
+- async SQLAlchemy setup issues
+- Docker module path resolution
+- incorrect ORM usage patterns
+- circular import handling in models
+- misunderstanding of session lifecycle
+- improper separation of layers (initial stage)
+
+---
+
+## Important Design Decisions
+
+### Why Repository + Service split exists
+
+- repository → data access only
+- service → business logic and orchestration
+
+This improves:
+
+- testability
+- scalability
+- separation of concerns
+
+---
+
+### Why schemas are separate from ORM
+
+- prevents leaking database structure into API
+- enables independent API evolution
+- improves validation control
+
+---
+
+### Why async SQLAlchemy is used
+
+- non-blocking I/O
+- better scalability under concurrent requests
+- aligns with FastAPI async model
+
+---
+
+## Current Status
+
+The project is in a stable architectural state:
+
+- layered backend structure implemented
+- async database fully integrated
+- DI system in place
+- schema separation enforced
+- codebase formatted and linted
+
+---
+
+## Next Steps
+
+Planned improvements:
+
+- introduce Alembic migrations (schema versioning)
+- replace create_all with migration system
+- add seed/test data
+- expand API with additional entities (Post, Comment)
+- investigate ORM loading strategies (N+1, lazy/eager loading)
+
+---
+
+Introduce Alembic migrations (schema versioning)
+
+- replace create_all with migration system
+- add seed/test data
+- expand API with additional entities (Post, Comment)
+- investigate ORM loading strategies (N+1, lazy/eager loading)
 
 ---

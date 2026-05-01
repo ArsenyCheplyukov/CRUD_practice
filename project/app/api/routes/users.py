@@ -1,38 +1,57 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import status
+
+from app.services.user_service import UserService
 from app.core.db import get_db
 from app.core.dependencies import get_user_service
-from app.services.user_service import UserService
-from fastapi import status
+from app.schemas.user import UserCreate, UserRead
 
 user_router = APIRouter(prefix="/users", tags=["users"])
 
 
-@user_router.get("/", status_code=status.HTTP_200_OK)
-async def list_users(session: AsyncSession = Depends(get_db),
-                     service: UserService = Depends(get_user_service)) -> dict:
-  """Get all users"""
-  users = await service.list_users(session)
-  return {"users": users}
+@user_router.get(
+    "/",
+    response_model=list[UserRead],
+    status_code=status.HTTP_200_OK,
+)
+async def list_users(
+    session: AsyncSession = Depends(get_db),
+    service: UserService = Depends(get_user_service),
+):
+    """List all users"""
+    return await service.list_users(session)
 
 
-@user_router.get("/{user_id}", status_code=status.HTTP_200_OK)
-async def get_user(user_id: int,
-                   session: AsyncSession = Depends(get_db),
-                   service: UserService = Depends(get_user_service)) -> dict:
-  """Get user by id"""
-  user = await service.get_user(session, user_id)
-  if user is None:
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-  return {"user": user}
+@user_router.get(
+    "/{user_id}",
+    response_model=UserRead,
+    status_code=status.HTTP_200_OK,
+)
+async def get_user(
+    user_id: int,
+    session: AsyncSession = Depends(get_db),
+    service: UserService = Depends(get_user_service),
+):
+    """Get user by id"""
+    user = await service.get_user(session, user_id)
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
 
 
-@user_router.post("/", status_code=status.HTTP_201_CREATED)
-async def create_user(name: str,
-                      session: AsyncSession = Depends(get_db),
-                      service: UserService = Depends(get_user_service)) -> dict:
-  try:
-    user = await service.create_user(session, name)
-  except ValueError as e:
-    raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
-  return {"user": user}
+@user_router.post(
+    "/",
+    response_model=UserRead,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_user(
+    user_in: UserCreate,
+    session: AsyncSession = Depends(get_db),
+    service: UserService = Depends(get_user_service),
+):
+    try:
+        user = await service.create_user(session, user_in.name)
+    except ValueError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+    return user
