@@ -44,6 +44,7 @@ Client → FastAPI (API Layer) → Service Layer → Repository Layer → SQLAlc
 
 ## Project Structure
 
+```md
 app/
 ├── api/ # HTTP routes (FastAPI layer)
 ├── core/ # configuration, DB, dependencies
@@ -52,6 +53,7 @@ app/
 ├── repositories/ # database access layer
 ├── services/ # business logic layer
 └── main.py # application entry point
+```
 
 ---
 
